@@ -1,5 +1,4 @@
-import React from 'react';
-// import React, { useState, useEffect } from 'react';
+ "src/App.js": import React, { useState, useEffect } from 'react';
 import { ChevronRight, ChevronLeft, BookOpen, CheckCircle, XCircle, RotateCcw, Plus, Edit3, School, Calendar, Users, Settings, Home, LogOut, Trash2 } from 'lucide-react';
 
 const EnglishLearningPlatform = () => {
@@ -1460,14 +1459,14 @@ const EnglishLearningPlatform = () => {
   return null;
 };
 
-export default EnglishLearningPlatform;
+export default EnglishLearningPlatform;,
 
-function App() {
-  return (
-    <div className="App">
-      <EnglishLearningPlatform />
-    </div>
-  );
+  "vercel.json": {
+    "rewrites": [
+      {
+        "source": "/(.*)",
+        "destination": "/index.html"
+      }
+    ]
+  }
 }
-
-export default App;
