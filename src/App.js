@@ -1,5 +1,4 @@
-import React from 'react';
-// import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronRight, ChevronLeft, BookOpen, CheckCircle, XCircle, RotateCcw, Plus, Edit3, School, Calendar, Users, Settings, Home, LogOut, Trash2 } from 'lucide-react';
 
 const EnglishLearningPlatform = () => {
@@ -1031,6 +1030,226 @@ const EnglishLearningPlatform = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">학교 선택 (시험 추가용)</label>
                     <select
                       value={selectedAdminSchool}
+                      onChange={(e) => {
+                        setSelectedAdminSchool(e.target.value);
+                        setSelectedAdminExam('');
+                        setEditingQuestion(null);
+                      }}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    >
+                      <option value="">학교를 선택하세요</option>
+                      {Object.keys(schoolData).map(school => (
+                        <option key={school} value={school}>{school}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedAdminSchool && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">시험 선택</label>
+                      <select
+                        value={selectedAdminExam}
+                        onChange={(e) => {
+                          setSelectedAdminExam(e.target.value);
+                          setEditingQuestion(null);
+                        }}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        <option value="">시험을 선택하세요</option>
+                        {Object.keys(schoolData[selectedAdminSchool]).map(exam => (
+                          <option key={exam} value={exam}>{exam}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {selectedAdminSchool && selectedAdminExam && (
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-gray-800">문제 목록</h4>
+                      
+                      {/* 수정 중인 문제가 있을 때 */}
+                      {editingQuestion && (
+                        <div className="border-2 border-purple-300 rounded-lg p-4 bg-purple-50">
+                          <div className="flex justify-between items-center mb-4">
+                            <h5 className="font-semibold text-purple-800">문제 수정 중</h5>
+                            <button
+                              onClick={cancelEditing}
+                              className="text-gray-500 hover:text-gray-700"
+                            >
+                              <XCircle className="w-5 h-5" />
+                            </button>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">문제</label>
+                              <textarea
+                                value={editingQuestion.question}
+                                onChange={(e) => setEditingQuestion({...editingQuestion, question: e.target.value})}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                rows="3"
+                              />
+                            </div>
+
+                            {editingQuestion.type === 'multiple_choice' && (
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">선택지</label>
+                                <div className="space-y-2">
+                                  {editingQuestion.options.map((option, index) => (
+                                    <div key={index} className="flex items-center space-x-2">
+                                      <input
+                                        type="radio"
+                                        name="editCorrectAnswer"
+                                        checked={editingQuestion.correctAnswer === index}
+                                        onChange={() => setEditingQuestion({...editingQuestion, correctAnswer: index})}
+                                        className="text-purple-600"
+                                      />
+                                      <input
+                                        type="text"
+                                        value={option}
+                                        onChange={(e) => {
+                                          const newOptions = [...editingQuestion.options];
+                                          newOptions[index] = e.target.value;
+                                          setEditingQuestion({...editingQuestion, options: newOptions});
+                                        }}
+                                        placeholder={`선택지 ${index + 1}`}
+                                        className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {editingQuestion.type === 'short_answer' && (
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  정답 (여러 정답이 있을 경우 쉼표로 구분)
+                                </label>
+                                <input
+                                  type="text"
+                                  value={Array.isArray(editingQuestion.correctAnswer) 
+                                    ? editingQuestion.correctAnswer.join(', ')
+                                    : editingQuestion.correctAnswer}
+                                  onChange={(e) => {
+                                    const answers = e.target.value.split(',').map(ans => ans.trim()).filter(ans => ans);
+                                    setEditingQuestion({
+                                      ...editingQuestion, 
+                                      correctAnswer: answers.length <= 1 ? (answers[0] || '') : answers
+                                    });
+                                  }}
+                                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                />
+                              </div>
+                            )}
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">해설</label>
+                              <textarea
+                                value={editingQuestion.explanation}
+                                onChange={(e) => setEditingQuestion({...editingQuestion, explanation: e.target.value})}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                rows="3"
+                              />
+                            </div>
+
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => updateQuestion(selectedAdminSchool, selectedAdminExam, editingQuestion.id, editingQuestion)}
+                                className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 font-medium"
+                              >
+                                수정 완료
+                              </button>
+                              <button
+                                onClick={cancelEditing}
+                                className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 font-medium"
+                              >
+                                취소
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* 문제 목록 */}
+                      {schoolData[selectedAdminSchool][selectedAdminExam].map((question, index) => (
+                        <div key={question.id} className={`border rounded-lg p-3 ${
+                          editingQuestion?.id === question.id ? 'border-purple-300 bg-purple-50' : 'border-gray-200'
+                        }`}>
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="text-sm text-gray-500 mb-1">
+                                문제 {index + 1} ({question.type === 'multiple_choice' ? '객관식' : '주관식'})
+                              </div>
+                              <div className="font-medium text-gray-800 mb-2">
+                                {question.question}
+                              </div>
+                              {question.type === 'multiple_choice' && (
+                                <div className="text-sm text-gray-600 mb-1">
+                                  선택지: {question.options.join(', ')}
+                                </div>
+                              )}
+                              <div className="text-sm text-gray-600 mb-1">
+                                정답: {question.type === 'multiple_choice' 
+                                  ? question.options[question.correctAnswer]
+                                  : Array.isArray(question.correctAnswer) 
+                                    ? question.correctAnswer.join(', ')
+                                    : question.correctAnswer}
+                              </div>
+                              {question.explanation && (
+                                <div className="text-sm text-gray-500">
+                                  해설: {question.explanation}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex space-x-1 ml-2">
+                              <button
+                                onClick={() => startEditingQuestion(question)}
+                                disabled={editingQuestion !== null}
+                                className="p-1 text-blue-600 hover:bg-blue-50 rounded disabled:text-gray-400"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => deleteQuestion(selectedAdminSchool, selectedAdminExam, question.id)}
+                                disabled={editingQuestion !== null}
+                                className="p-1 text-red-600 hover:bg-red-50 rounded disabled:text-gray-400"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {schoolData[selectedAdminSchool][selectedAdminExam].length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                          아직 문제가 없습니다. 문제 추가 메뉴에서 문제를 추가해주세요.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+function App() {
+  return (
+    <div className="App">
+      <EnglishLearningPlatform />
+    </div>
+  );
+}
+
+export default App;School}
                       onChange={(e) => setSelectedAdminSchool(e.target.value)}
                       className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     >
@@ -1248,226 +1467,4 @@ const EnglishLearningPlatform = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">학교 선택</label>
                     <select
-                      value={selectedAdminSchool}
-                      onChange={(e) => {
-                        setSelectedAdminSchool(e.target.value);
-                        setSelectedAdminExam('');
-                        setEditingQuestion(null);
-                      }}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    >
-                      <option value="">학교를 선택하세요</option>
-                      {Object.keys(schoolData).map(school => (
-                        <option key={school} value={school}>{school}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {selectedAdminSchool && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">시험 선택</label>
-                      <select
-                        value={selectedAdminExam}
-                        onChange={(e) => {
-                          setSelectedAdminExam(e.target.value);
-                          setEditingQuestion(null);
-                        }}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      >
-                        <option value="">시험을 선택하세요</option>
-                        {Object.keys(schoolData[selectedAdminSchool]).map(exam => (
-                          <option key={exam} value={exam}>{exam}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {selectedAdminSchool && selectedAdminExam && (
-                    <div className="space-y-3">
-                      <h4 className="font-medium text-gray-800">문제 목록</h4>
-                      
-                      {/* 수정 중인 문제가 있을 때 */}
-                      {editingQuestion && (
-                        <div className="border-2 border-purple-300 rounded-lg p-4 bg-purple-50">
-                          <div className="flex justify-between items-center mb-4">
-                            <h5 className="font-semibold text-purple-800">문제 수정 중</h5>
-                            <button
-                              onClick={cancelEditing}
-                              className="text-gray-500 hover:text-gray-700"
-                            >
-                              <XCircle className="w-5 h-5" />
-                            </button>
-                          </div>
-                          
-                          <div className="space-y-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">문제</label>
-                              <textarea
-                                value={editingQuestion.question}
-                                onChange={(e) => setEditingQuestion({...editingQuestion, question: e.target.value})}
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                                rows="3"
-                              />
-                            </div>
-
-                            {editingQuestion.type === 'multiple_choice' && (
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">선택지</label>
-                                <div className="space-y-2">
-                                  {editingQuestion.options.map((option, index) => (
-                                    <div key={index} className="flex items-center space-x-2">
-                                      <input
-                                        type="radio"
-                                        name="editCorrectAnswer"
-                                        checked={editingQuestion.correctAnswer === index}
-                                        onChange={() => setEditingQuestion({...editingQuestion, correctAnswer: index})}
-                                        className="text-purple-600"
-                                      />
-                                      <input
-                                        type="text"
-                                        value={option}
-                                        onChange={(e) => {
-                                          const newOptions = [...editingQuestion.options];
-                                          newOptions[index] = e.target.value;
-                                          setEditingQuestion({...editingQuestion, options: newOptions});
-                                        }}
-                                        placeholder={`선택지 ${index + 1}`}
-                                        className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {editingQuestion.type === 'short_answer' && (
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  정답 (여러 정답이 있을 경우 쉼표로 구분)
-                                </label>
-                                <input
-                                  type="text"
-                                  value={Array.isArray(editingQuestion.correctAnswer) 
-                                    ? editingQuestion.correctAnswer.join(', ')
-                                    : editingQuestion.correctAnswer}
-                                  onChange={(e) => {
-                                    const answers = e.target.value.split(',').map(ans => ans.trim()).filter(ans => ans);
-                                    setEditingQuestion({
-                                      ...editingQuestion, 
-                                      correctAnswer: answers.length <= 1 ? (answers[0] || '') : answers
-                                    });
-                                  }}
-                                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                                />
-                              </div>
-                            )}
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">해설</label>
-                              <textarea
-                                value={editingQuestion.explanation}
-                                onChange={(e) => setEditingQuestion({...editingQuestion, explanation: e.target.value})}
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                                rows="3"
-                              />
-                            </div>
-
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => updateQuestion(selectedAdminSchool, selectedAdminExam, editingQuestion.id, editingQuestion)}
-                                className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 font-medium"
-                              >
-                                수정 완료
-                              </button>
-                              <button
-                                onClick={cancelEditing}
-                                className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 font-medium"
-                              >
-                                취소
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* 문제 목록 */}
-                      {schoolData[selectedAdminSchool][selectedAdminExam].map((question, index) => (
-                        <div key={question.id} className={`border rounded-lg p-3 ${
-                          editingQuestion?.id === question.id ? 'border-purple-300 bg-purple-50' : 'border-gray-200'
-                        }`}>
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="text-sm text-gray-500 mb-1">
-                                문제 {index + 1} ({question.type === 'multiple_choice' ? '객관식' : '주관식'})
-                              </div>
-                              <div className="font-medium text-gray-800 mb-2">
-                                {question.question}
-                              </div>
-                              {question.type === 'multiple_choice' && (
-                                <div className="text-sm text-gray-600 mb-1">
-                                  선택지: {question.options.join(', ')}
-                                </div>
-                              )}
-                              <div className="text-sm text-gray-600 mb-1">
-                                정답: {question.type === 'multiple_choice' 
-                                  ? question.options[question.correctAnswer]
-                                  : Array.isArray(question.correctAnswer) 
-                                    ? question.correctAnswer.join(', ')
-                                    : question.correctAnswer}
-                              </div>
-                              {question.explanation && (
-                                <div className="text-sm text-gray-500">
-                                  해설: {question.explanation}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex space-x-1 ml-2">
-                              <button
-                                onClick={() => startEditingQuestion(question)}
-                                disabled={editingQuestion !== null}
-                                className="p-1 text-blue-600 hover:bg-blue-50 rounded disabled:text-gray-400"
-                              >
-                                <Edit3 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => deleteQuestion(selectedAdminSchool, selectedAdminExam, question.id)}
-                                disabled={editingQuestion !== null}
-                                className="p-1 text-red-600 hover:bg-red-50 rounded disabled:text-gray-400"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      
-                      {schoolData[selectedAdminSchool][selectedAdminExam].length === 0 && (
-                        <div className="text-center py-8 text-gray-500">
-                          아직 문제가 없습니다. 문제 추가 메뉴에서 문제를 추가해주세요.
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  return null;
-};
-
-export default EnglishLearningPlatform;
-
-function App() {
-  return (
-    <div className="App">
-      <EnglishLearningPlatform />
-    </div>
-  );
-}
-
-export default App;
+                      value={selectedAdmin
