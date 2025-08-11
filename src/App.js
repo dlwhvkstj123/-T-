@@ -1046,6 +1046,226 @@ const EnglishLearningPlatform = () => {
 
                   {selectedAdminSchool && (
                     <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">새 시험 추가</label>
+                      <div className="flex space-x-2">
+                        <input
+                          type="text"
+                          value={newExam}
+                          onChange={(e) => setNewExam(e.target.value)}
+                          placeholder="시험명을 입력하세요"
+                          className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        />
+                        <button
+                          onClick={addNewExam}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                        >
+                          추가
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 문제 추가 */}
+          {adminMode === 'add_question' && (
+            <div className="space-y-4">
+              <div className="bg-white rounded-lg p-4 shadow-md">
+                <h3 className="text-lg font-semibold mb-3 text-gray-800">📝 문제 추가</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">학교 선택</label>
+                    <select
+                      value={selectedAdminSchool}
+                      onChange={(e) => setSelectedAdminSchool(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    >
+                      <option value="">학교를 선택하세요</option>
+                      {Object.keys(schoolData).map(school => (
+                        <option key={school} value={school}>{school}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedAdminSchool && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">시험 선택</label>
+                      <select
+                        value={selectedAdminExam}
+                        onChange={(e) => setSelectedAdminExam(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        <option value="">시험을 선택하세요</option>
+                        {Object.keys(schoolData[selectedAdminSchool]).map(exam => (
+                          <option key={exam} value={exam}>{exam}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {selectedAdminSchool && selectedAdminExam && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">문제 유형</label>
+                        <div className="flex space-x-4">
+                          <button
+                            onClick={() => {
+                              setQuestionType('multiple_choice');
+                              setNewQuestion({
+                                type: 'multiple_choice',
+                                question: '',
+                                options: ['', '', '', ''],
+                                correctAnswer: 0,
+                                explanation: ''
+                              });
+                            }}
+                            className={`px-4 py-2 rounded-lg ${
+                              questionType === 'multiple_choice'
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                          >
+                            객관식
+                          </button>
+                          <button
+                            onClick={() => {
+                              setQuestionType('short_answer');
+                              setNewQuestion({
+                                type: 'short_answer',
+                                question: '',
+                                correctAnswer: '',
+                                explanation: ''
+                              });
+                            }}
+                            className={`px-4 py-2 rounded-lg ${
+                              questionType === 'short_answer'
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                          >
+                            주관식
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">문제</label>
+                        <textarea
+                          value={newQuestion.question}
+                          onChange={(e) => setNewQuestion({...newQuestion, question: e.target.value})}
+                          placeholder="문제를 입력하세요"
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          rows="3"
+                        />
+                      </div>
+
+                      {questionType === 'multiple_choice' && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">선택지</label>
+                          <div className="space-y-2">
+                            {newQuestion.options.map((option, index) => (
+                              <div key={index} className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  name="correctAnswer"
+                                  checked={newQuestion.correctAnswer === index}
+                                  onChange={() => setNewQuestion({...newQuestion, correctAnswer: index})}
+                                  className="text-purple-600"
+                                />
+                                <input
+                                  type="text"
+                                  value={option}
+                                  onChange={(e) => {
+                                    const newOptions = [...newQuestion.options];
+                                    newOptions[index] = e.target.value;
+                                    setNewQuestion({...newQuestion, options: newOptions});
+                                  }}
+                                  placeholder={`선택지 ${index + 1}`}
+                                  className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {questionType === 'short_answer' && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            정답 (여러 정답이 있을 경우 쉼표로 구분)
+                          </label>
+                          <input
+                            type="text"
+                            value={Array.isArray(newQuestion.correctAnswer) 
+                              ? newQuestion.correctAnswer.join(', ')
+                              : newQuestion.correctAnswer}
+                            onChange={(e) => {
+                              const answers = e.target.value.split(',').map(ans => ans.trim()).filter(ans => ans);
+                              setNewQuestion({
+                                ...newQuestion, 
+                                correctAnswer: answers.length <= 1 ? (answers[0] || '') : answers
+                              });
+                            }}
+                            placeholder="정답을 입력하세요"
+                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          />
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">해설</label>
+                        <textarea
+                          value={newQuestion.explanation}
+                          onChange={(e) => setNewQuestion({...newQuestion, explanation: e.target.value})}
+                          placeholder="해설을 입력하세요"
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          rows="3"
+                        />
+                      </div>
+
+                      <button
+                        onClick={addNewQuestion}
+                        className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-medium"
+                      >
+                        문제 추가
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 문제 수정 */}
+          {adminMode === 'edit_questions' && (
+            <div className="space-y-4">
+              <div className="bg-white rounded-lg p-4 shadow-md">
+                <h3 className="text-lg font-semibold mb-3 text-gray-800">✏️ 문제 수정</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">학교 선택</label>
+                    <select
+                      value={selectedAdminSchool}
+                      onChange={(e) => {
+                        setSelectedAdminSchool(e.target.value);
+                        setSelectedAdminExam('');
+                        setEditingQuestion(null);
+                      }}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    >
+                      <option value="">학교를 선택하세요</option>
+                      {Object.keys(schoolData).map(school => (
+                        <option key={school} value={school}>{school}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedAdminSchool && (
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">시험 선택</label>
                       <select
                         value={selectedAdminExam}
@@ -1241,230 +1461,4 @@ const EnglishLearningPlatform = () => {
   return null;
 };
 
-function App() {
-  return (
-    <div className="App">
-      <EnglishLearningPlatform />
-    </div>
-  );
-}
-
-export default App;School}
-                      onChange={(e) => setSelectedAdminSchool(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    >
-                      <option value="">학교를 선택하세요</option>
-                      {Object.keys(schoolData).map(school => (
-                        <option key={school} value={school}>{school}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {selectedAdminSchool && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">새 시험 추가</label>
-                      <div className="flex space-x-2">
-                        <input
-                          type="text"
-                          value={newExam}
-                          onChange={(e) => setNewExam(e.target.value)}
-                          placeholder="시험명을 입력하세요"
-                          className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                        />
-                        <button
-                          onClick={addNewExam}
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-                        >
-                          추가
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 문제 추가 */}
-          {adminMode === 'add_question' && (
-            <div className="space-y-4">
-              <div className="bg-white rounded-lg p-4 shadow-md">
-                <h3 className="text-lg font-semibold mb-3 text-gray-800">📝 문제 추가</h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">학교 선택</label>
-                    <select
-                      value={selectedAdminSchool}
-                      onChange={(e) => setSelectedAdminSchool(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    >
-                      <option value="">학교를 선택하세요</option>
-                      {Object.keys(schoolData).map(school => (
-                        <option key={school} value={school}>{school}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {selectedAdminSchool && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">시험 선택</label>
-                      <select
-                        value={selectedAdminExam}
-                        onChange={(e) => setSelectedAdminExam(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      >
-                        <option value="">시험을 선택하세요</option>
-                        {Object.keys(schoolData[selectedAdminSchool]).map(exam => (
-                          <option key={exam} value={exam}>{exam}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {selectedAdminSchool && selectedAdminExam && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">문제 유형</label>
-                        <div className="flex space-x-4">
-                          <button
-                            onClick={() => {
-                              setQuestionType('multiple_choice');
-                              setNewQuestion({
-                                type: 'multiple_choice',
-                                question: '',
-                                options: ['', '', '', ''],
-                                correctAnswer: 0,
-                                explanation: ''
-                              });
-                            }}
-                            className={`px-4 py-2 rounded-lg ${
-                              questionType === 'multiple_choice'
-                                ? 'bg-purple-600 text-white'
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                          >
-                            객관식
-                          </button>
-                          <button
-                            onClick={() => {
-                              setQuestionType('short_answer');
-                              setNewQuestion({
-                                type: 'short_answer',
-                                question: '',
-                                correctAnswer: '',
-                                explanation: ''
-                              });
-                            }}
-                            className={`px-4 py-2 rounded-lg ${
-                              questionType === 'short_answer'
-                                ? 'bg-purple-600 text-white'
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                          >
-                            주관식
-                          </button>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">문제</label>
-                        <textarea
-                          value={newQuestion.question}
-                          onChange={(e) => setNewQuestion({...newQuestion, question: e.target.value})}
-                          placeholder="문제를 입력하세요"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                          rows="3"
-                        />
-                      </div>
-
-                      {questionType === 'multiple_choice' && (
-                        <>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">선택지</label>
-                            <div className="space-y-2">
-                              {newQuestion.options.map((option, index) => (
-                                <div key={index} className="flex items-center space-x-2">
-                                  <input
-                                    type="radio"
-                                    name="correctAnswer"
-                                    checked={newQuestion.correctAnswer === index}
-                                    onChange={() => setNewQuestion({...newQuestion, correctAnswer: index})}
-                                    className="text-purple-600"
-                                  />
-                                  <input
-                                    type="text"
-                                    value={option}
-                                    onChange={(e) => {
-                                      const newOptions = [...newQuestion.options];
-                                      newOptions[index] = e.target.value;
-                                      setNewQuestion({...newQuestion, options: newOptions});
-                                    }}
-                                    placeholder={`선택지 ${index + 1}`}
-                                    className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                                  />
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </>
-                      )}
-
-                      {questionType === 'short_answer' && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            정답 (여러 정답이 있을 경우 쉼표로 구분)
-                          </label>
-                          <input
-                            type="text"
-                            value={Array.isArray(newQuestion.correctAnswer) 
-                              ? newQuestion.correctAnswer.join(', ')
-                              : newQuestion.correctAnswer}
-                            onChange={(e) => {
-                              const answers = e.target.value.split(',').map(ans => ans.trim()).filter(ans => ans);
-                              setNewQuestion({
-                                ...newQuestion, 
-                                correctAnswer: answers.length <= 1 ? (answers[0] || '') : answers
-                              });
-                            }}
-                            placeholder="정답을 입력하세요"
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                          />
-                        </div>
-                      )}
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">해설</label>
-                        <textarea
-                          value={newQuestion.explanation}
-                          onChange={(e) => setNewQuestion({...newQuestion, explanation: e.target.value})}
-                          placeholder="해설을 입력하세요"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                          rows="3"
-                        />
-                      </div>
-
-                      <button
-                        onClick={addNewQuestion}
-                        className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-medium"
-                      >
-                        문제 추가
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 문제 수정 */}
-          {adminMode === 'edit_questions' && (
-            <div className="space-y-4">
-              <div className="bg-white rounded-lg p-4 shadow-md">
-                <h3 className="text-lg font-semibold mb-3 text-gray-800">✏️ 문제 수정</h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">학교 선택</label>
-                    <select
-                      value={selectedAdmin
+export default EnglishLearningPlatform;
